@@ -99,9 +99,11 @@ Powerwall.prototype = {
                 .on('get', _createFastGetter(this.getBatteryLevel.bind(this), this.log))
                 .on('set', this.setBrightnessBatteryVisualizer.bind(this));
             eventPolling(this.batteryVisualizer, Characteristic.Brightness, this.pollingInterval);
-            this.batteryVisualizer // Set saturation to fix compatibility with Homebridge Alexa
+            this.batteryVisualizer // Set saturation to fix compatibility with Homebridge Alexa.
+                // Paulcook: make a percentage, so that we can use Eve rules with greater than/less than criteria
                 .getCharacteristic(Characteristic.Saturation)
-                .on('get', _createFastGetter(this.getConstantSaturationBatteryVisualizer.bind(this), this.log))
+                //.on('get', _createFastGetter(this.getConstantSaturationBatteryVisualizer.bind(this), this.log))
+                .on('get', _createFastGetter(this.getPercentageSaturationBatteryVisualizer.bind(this), this.log))
                 .on('set', this.setSaturationBatteryVisualizer.bind(this));
             services.push(this.batteryVisualizer);
         }
@@ -224,6 +226,10 @@ Powerwall.prototype = {
 
     getConstantSaturationBatteryVisualizer: function(callback) {
         callback(false, 100);
+    },
+
+    getPercentageSaturationBatteryVisualizer: function(callback) {
+        this.percentageGetter.requestValue(callback, this.pollingInterval / 2);
     },
 
     setHueBatteryVisualizer: function(state, callback) {
